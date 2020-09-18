@@ -5,6 +5,7 @@ import { MatTable } from '@angular/material/table';
 import { ProductReadDataSource } from './product-read-datasource';
 import { ProductService } from '../product.service';
 import { Product } from '../product.model';
+import { ProductReadFilter } from './product-read-filter';
 
 @Component({
   selector: 'app-product-read',
@@ -20,16 +21,32 @@ export class ProductReadComponent implements AfterViewInit, OnInit {
   /** Columns displayed in the table. Columns IDs can be added, removed, or reordered. */
   displayedColumns = ['id', 'name', 'price', 'action'];
 
+  private filtroValue = {
+    id: '', name: '', price: ''
+  };
+
   constructor(
-    private productService: ProductService
-  ) { }
+    private productService: ProductService,
+    private productReadFilter: ProductReadFilter
+  ) {
+    productReadFilter.filter.subscribe(f => (this.filtroValue = f));
+  }
 
   ngOnInit() {
-    this.dataSource = new ProductReadDataSource();
+    this.dataSource = new ProductReadDataSource(
+      this.productReadFilter,
+    );
+
+    this.productReadFilter.clearFilter();
   }
 
   ngAfterViewInit() {
     this.initTableDataSource()
+    
+    this.productReadFilter.whenUpdatedSource.next([
+      ...this.productReadFilter.whenUpdated,
+      this.paginator
+    ]);
   }
 
   initTableDataSource(){
@@ -41,6 +58,10 @@ export class ProductReadComponent implements AfterViewInit, OnInit {
       this.table.dataSource = undefined;
       this.table.dataSource = this.dataSource;
     })
+  }
+
+  updateFiltro() {
+    this.productReadFilter.changeFilter(this.filtroValue);
   }
 
   deleteProduct(id: string){

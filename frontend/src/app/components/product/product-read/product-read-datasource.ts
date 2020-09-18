@@ -4,6 +4,7 @@ import { MatSort } from '@angular/material/sort';
 import { map } from 'rxjs/operators';
 import { Observable, of as observableOf, merge } from 'rxjs';
 import { Product } from '../product.model';
+import { ProductReadFilter } from './product-read-filter';
 
 /**
  * Data source for the ProductRead view. This class should
@@ -15,8 +16,17 @@ export class ProductReadDataSource extends DataSource<Product> {
   paginator: MatPaginator;
   sort: MatSort;
 
-  constructor() {
+  filteredData: Product[] = [];
+
+  private filtro = {
+    id: '', name: '', price: ''
+  };
+
+  constructor(
+    private productReadFilter: ProductReadFilter
+  ) {
     super();
+    this.productReadFilter.filterSource.subscribe(filtro => (this.filtro = filtro));
   }
 
   /**
@@ -29,20 +39,53 @@ export class ProductReadDataSource extends DataSource<Product> {
     // stream for the data-table to consume.
     const dataMutations = [
       observableOf(this.data),
+      this.productReadFilter.filterSource,
       this.paginator.page,
       this.sort.sortChange
     ];
 
-    return merge(...dataMutations).pipe(map(() => {
-      return this.getPagedData(this.getSortedData([...this.data]));
-    }));
+    return merge(...dataMutations).pipe(map(() => this.getUpdatedData()));
   }
+
+  public getUpdatedData() {
+    this.filteredData = this.getFilteredData(this.data);
+
+    this.paginator.length = this.filteredData.length;
+    var sortedFormularios = this.getPagedData(this.getSortedData(this.filteredData));   
+
+    return sortedFormularios;
+}
 
   /**
    *  Called when the table is being destroyed. Use this function, to clean up
    * any open connections or free any held resources that were set up during connect.
    */
   disconnect() {}
+
+  public getFilteredData(data: Product[]): Product[] {
+
+    const { id, name, price } = this.filtro;
+
+    let newData = data;
+
+    if (id !== '') {
+        newData = newData.filter(d =>
+            d.id.toString().toUpperCase().includes(id.toString().toUpperCase())
+        );
+    }
+    if (name !== '') {
+        newData = newData.filter(d =>
+            d.name.toUpperCase().includes(name.toUpperCase())
+        );
+    }
+    if (price != null) {
+        newData = newData.filter(d =>
+            d.price.toString().replace(".", ",").toUpperCase().includes(price.toString().toUpperCase())
+        );
+    }
+
+    return [...newData];
+}
 
   /**
    * Paginate the data (client-side). If you're using server-side pagination,

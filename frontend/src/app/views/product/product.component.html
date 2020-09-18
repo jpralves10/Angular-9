@@ -2,4 +2,30 @@
     Novo Produto
 </button>
 
+<div class="filtro-panel-content">
+    <div class="filtro-fields-one">
+        <mat-form-field>
+            <input
+                matInput
+                placeholder="ID do Produto"
+                [(ngModel)]="current_filtro.id"
+                (ngModelChange)="updateFiltro()" />
+        </mat-form-field>
+        <mat-form-field>
+            <input
+                matInput
+                placeholder="Nome do Produto"
+                [(ngModel)]="current_filtro.name"
+                (ngModelChange)="updateFiltro()" />
+        </mat-form-field>
+        <mat-form-field>
+            <input
+                matInput
+                placeholder="Preço do Produto"
+                [(ngModel)]="current_filtro.price"
+                (ngModelChange)="updateFiltro()" />
+        </mat-form-field>
+    </div>
+</div>
+
 <app-product-read></app-product-read>
